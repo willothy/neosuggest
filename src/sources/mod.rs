@@ -12,13 +12,11 @@ where
     Self: Send + Sync,
 {
     /// Only enable for specific word types
-    #[inline]
     fn cond(&self, _word: &str) -> bool {
         true
     }
 
     /// Get/set priority for the source
-    #[inline]
     fn priority(&self) -> usize {
         0
     }
@@ -41,11 +39,15 @@ impl Sources {
             .sources
             .iter()
             .cloned()
-            .map(|source| {
-                tokio::task::spawn({
-                    let word = word.clone();
-                    async move { source.source(&*word).await }
-                })
+            .filter_map(|source| {
+                if source.cond(&*word) {
+                    Some(tokio::task::spawn({
+                        let word = word.clone();
+                        async move { source.source(&*word).await }
+                    }))
+                } else {
+                    None
+                }
             })
             .collect::<Vec<_>>();
         if tasks.is_empty() {

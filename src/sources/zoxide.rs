@@ -8,6 +8,10 @@ pub struct Zoxide;
 
 #[async_trait::async_trait]
 impl Source for Zoxide {
+    fn cond(&self, s: &str) -> bool {
+        s.split_whitespace().count() > 1
+    }
+
     async fn source(&self, word: &str) -> Option<String> {
         let mut split = word.split_whitespace().rev();
         let search = split.next()?;

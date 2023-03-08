@@ -9,6 +9,10 @@ pub struct Pwd;
 
 #[async_trait::async_trait]
 impl Source for Pwd {
+    fn cond(&self, s: &str) -> bool {
+        s.split_whitespace().count() > 1
+    }
+
     async fn source(&self, search_word: &str) -> Option<String> {
         let word = search_word.split_whitespace().last()?;
         let rest = search_word[..search_word.len() - word.len()].trim_end();

@@ -51,9 +51,9 @@ impl Source for Path {
         // let mut res = corpus.search(&*search, threshold);
 
         let path = var("PATH").ok()?;
-        let start_char = search.chars().nth(0)?;
+        let start = &search[0..search.len().min(2)];
         let slen = search.len();
-        let threshold = if slen > 3 { 0.5 } else { 0.1 * slen as f32 };
+        let threshold = if slen > 3 { 0.4 } else { 0.1 * slen as f32 };
         let paths = path
             .split(":")
             .collect::<Vec<_>>()
@@ -71,7 +71,7 @@ impl Source for Path {
                                 continue;
                             }
                             let name = e.file_name().to_string_lossy().to_string();
-                            if name.starts_with(start_char) {
+                            if name.starts_with(start) {
                                 results.push(name);
                             }
                         }
@@ -90,7 +90,7 @@ impl Source for Path {
             .collect::<Vec<_>>();
 
         let mut res = CorpusBuilder::new()
-            .arity(2)
+            .arity(5)
             .fill(paths)
             .finish()
             .search(&*search, threshold);

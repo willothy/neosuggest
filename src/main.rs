@@ -24,8 +24,8 @@ async fn main() -> ExitCode {
     let sources = SourcesBuilder::new()
         .using(Basics)
         .using(Pwd) // Matches entries in pwd or path query
-        .using(Path)
         .using(Zoxide) // Matches with Zoxide
+        .using(Path)
         .finalize();
 
     let mut stdout = stdout();
