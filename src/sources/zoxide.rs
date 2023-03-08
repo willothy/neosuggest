@@ -18,17 +18,14 @@ impl Source for Zoxide {
             .ok()
             .map_or(None, |zoxide: Output| {
                 zoxide.status.success().then(|| {
-                    let res = PathBuf::from(String::from_utf8_lossy(&zoxide.stdout).to_string());
+                    let res = PathBuf::from(String::from_utf8(zoxide.stdout).ok()?.trim());
                     let pwd = current_dir().ok()?;
-                    let common = common_path::common_path(&res, &pwd)?;
+                    let mut common = common_path::common_path(&res, &pwd)?;
+                    if common == res || common == pwd {
+                        common.pop();
+                    }
                     let m = res.strip_prefix(common).ok()?;
-                    // println!("pwd: {}", pwd.display());
-                    // // println!("common: {}", common.display());
-                    println!("m: {}", m.display());
-
-                    println!("res: {}", res.display());
-                    let dir = res.canonicalize().expect("bruh").is_dir();
-                    println!("dir: {}", dir);
+                    let dir = res.is_dir();
                     if rest.is_empty() {
                         Some(m.display().to_string() + if dir { "/" } else { "" })
                     } else {

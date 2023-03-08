@@ -5,6 +5,8 @@ use std::env::args;
 use std::io::{stdout, Write};
 use std::process::ExitCode;
 
+use self::sources::path::Path;
+
 pub mod builder;
 pub mod sources;
 
@@ -19,9 +21,8 @@ async fn main() -> ExitCode {
 
     let sources = SourcesBuilder::new()
         .using(Pwd) // Matches entries in pwd or path query
-        .with_priority(0)
+        .using(Path)
         .using(Zoxide) // Matches with Zoxide
-        .with_priority(0)
         .finalize();
 
     let mut stdout = stdout();

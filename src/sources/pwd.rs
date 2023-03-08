@@ -52,7 +52,7 @@ impl Source for Pwd {
         // }
 
         let slen = search.len();
-        let threshold = if slen > 3 { 0.5 } else { 0.1 * slen as f32 };
+        let threshold = if slen > 3 { 0.7 } else { 0.20 * slen as f32 };
 
         let entries = path
             .read_dir()
