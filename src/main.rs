@@ -1,6 +1,8 @@
 use builder::SourcesBuilder;
+use sources::basics::Basics;
 use sources::pwd::Pwd;
 use sources::zoxide::Zoxide;
+
 use std::env::args;
 use std::io::{stdout, Write};
 use std::process::ExitCode;
@@ -20,6 +22,7 @@ async fn main() -> ExitCode {
     };
 
     let sources = SourcesBuilder::new()
+        .using(Basics)
         .using(Pwd) // Matches entries in pwd or path query
         .using(Path)
         .using(Zoxide) // Matches with Zoxide

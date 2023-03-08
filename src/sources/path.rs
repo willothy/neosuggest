@@ -3,7 +3,6 @@ use std::env::var;
 use ngrammatic::CorpusBuilder;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use rayon::vec::IntoIter;
 use std::path::PathBuf;
 
 use super::Source;
