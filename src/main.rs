@@ -1,5 +1,4 @@
 use builder::SourcesBuilder;
-use sources::basics::Basics;
 use sources::pwd::Pwd;
 use sources::zoxide::Zoxide;
 
@@ -17,12 +16,11 @@ pub mod sources;
 #[tokio::main]
 async fn main() -> ExitCode {
     let word = match args().nth(1) {
-        Some(word) if !word.is_empty() => word,
+        Some(word) => word,
         _ => return ExitCode::SUCCESS,
     };
 
     let sources = SourcesBuilder::new()
-        .using(Basics)
         .using(Pwd) // Matches entries in pwd or path query
         .using(Zoxide) // Matches with Zoxide
         .using(Path)

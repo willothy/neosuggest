@@ -10,16 +10,21 @@ pub struct Pwd;
 #[async_trait::async_trait]
 impl Source for Pwd {
     fn cond(&self, s: &str) -> bool {
-        s.split_whitespace().count() > 1
+        s.split_whitespace().count() > 1 || s.ends_with(|s: char| s.is_whitespace())
     }
 
     async fn source(&self, search_word: &str) -> Option<String> {
-        let word = search_word.split_whitespace().last()?;
+        let split = search_word.split_whitespace();
+        let word = if split.clone().count() > 1 {
+            split.last()?
+        } else {
+            ""
+        };
         let rest = search_word[..search_word.len() - word.len()].trim_end();
         let pwd = current_dir().ok()?;
         let path = PathBuf::from(word);
         let len = path.components().count();
-        let (base_path, search) = if len > 1 {
+        let (base_path, mut search) = if len > 1 {
             let search = path
                 .components()
                 .last()
@@ -55,13 +60,21 @@ impl Source for Pwd {
         //     ));
         // }
 
-        let slen = search.len();
-        let threshold = if slen > 3 { 0.7 } else { 0.20 * slen as f32 };
-
         let entries = path
             .read_dir()
             .ok()?
-            .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()));
+            .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()))
+            .collect::<Vec<_>>();
+        if search == "" && !entries.is_empty() {
+            // search = entries.get(0)?.get(0)?;
+            let t = entries
+                .iter()
+                .find(|s| !s.starts_with('.') && !s.ends_with(".lock"))?
+                .clone();
+            search = t.to_owned();
+        }
+        let slen = search.len();
+        let threshold = if slen > 3 { 0.7 } else { 0.10 * slen as f32 };
         let mut res = CorpusBuilder::new()
             .arity(2)
             .fill(entries)

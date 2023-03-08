@@ -13,31 +13,31 @@ impl Source for Zoxide {
     }
 
     async fn source(&self, word: &str) -> Option<String> {
-        let mut split = word.split_whitespace().rev();
-        let search = split.next()?;
-        let rest = split.rev().collect::<Vec<_>>();
+        let search = word.split_whitespace().last()?.trim_end();
+        let rest = &word[..word.len() - search.len()].trim();
         Command::new("zoxide")
             .args(["query", search])
             .output()
             .ok()
             .map_or(None, |zoxide: Output| {
                 zoxide.status.success().then(|| {
-                    let res = PathBuf::from(String::from_utf8(zoxide.stdout).ok()?.trim());
+                    let res = PathBuf::from(
+                        String::from_utf8_lossy(zoxide.stdout.as_slice()).to_string(),
+                    );
                     let pwd = current_dir().ok()?;
-                    let mut common = common_path::common_path(&res, &pwd)?;
+                    let mut common = common_path::common_path(&res, &pwd).expect("bruh");
                     if common == res || common == pwd {
                         common.pop();
                     }
                     let m = res.strip_prefix(common).ok()?;
-                    let dir = res.is_dir();
+                    // let dir = res.is_dir();
                     if rest.is_empty() {
-                        Some(m.display().to_string() + if dir { "/" } else { "" })
+                        Some(m.file_name()?.to_string_lossy().to_string())
                     } else {
                         Some(format!(
-                            "{} {}{}",
-                            rest.join(" "),
-                            m.display().to_string(),
-                            if dir { "/" } else { "" }
+                            "{} {}",
+                            rest,
+                            m.file_name()?.to_string_lossy().to_string()
                         ))
                     }
                 })?

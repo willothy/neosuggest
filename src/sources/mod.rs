@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-pub mod basics;
 pub mod corpus;
 pub mod path;
 pub mod pwd;
