@@ -25,7 +25,7 @@ impl Source for Zoxide {
                         String::from_utf8_lossy(zoxide.stdout.as_slice()).to_string(),
                     );
                     let pwd = current_dir().ok()?;
-                    let mut common = common_path::common_path(&res, &pwd).expect("bruh");
+                    let mut common = common_path::common_path(&res, &pwd)?;
                     if common == res || common == pwd {
                         common.pop();
                     }

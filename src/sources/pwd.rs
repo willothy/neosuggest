@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use ngrammatic::CorpusBuilder;
 
+use crate::util::ExpandHome;
+
 use super::Source;
 
 pub struct Pwd;
@@ -23,7 +25,9 @@ impl Source for Pwd {
         };
         let rest = search_word[..search_word.len() - word.len()].trim_end();
         let pwd = current_dir().ok()?;
-        let path = PathBuf::from(word);
+        let mut path = PathBuf::from(word);
+        let home_abbr = path.starts_with("~");
+        path = path.expand()?;
         let len = path.components().count();
         let (base_path, mut search) = if len > 1 {
             let search = path
@@ -33,13 +37,12 @@ impl Source for Pwd {
                 .as_os_str()
                 .to_string_lossy()
                 .to_string();
-            let path = path.parent().unwrap().to_path_buf();
-
+            let path = path.parent()?;
             if !(path.exists() && path.is_dir()) {
                 return None;
             }
 
-            (path, search)
+            (path.to_path_buf(), search)
         } else {
             (pwd.clone(), word.to_owned())
         };
@@ -51,11 +54,13 @@ impl Source for Pwd {
             .ok()?
             .build()
             .ok()?;
+        let start = search.chars().nth(0)?;
         let entries = WalkBuilder::new(path)
             .max_depth(Some(1))
             .standard_filters(true)
             .overrides(overrides)
             .hidden(!search.starts_with('.'))
+            .filter_entry(move |e| e.file_name().to_string_lossy().starts_with(start))
             .build()
             .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()))
             .skip(1)
@@ -69,7 +74,7 @@ impl Source for Pwd {
             search = t.to_owned();
         }
         let slen = search.len();
-        let threshold = if slen > 3 { 0.7 } else { 0.10 * slen as f32 };
+        let threshold = if slen > 7 { 0.7 } else { 0.10 * slen as f32 };
         let mut res = CorpusBuilder::new()
             .arity(2)
             .fill(entries)
@@ -80,20 +85,27 @@ impl Source for Pwd {
 
             let res = if base_path == pwd {
                 let p = PathBuf::from(&matching);
-                if rest.is_empty() {
-                    matching + if p.is_dir() { "/" } else { "" }
+                let (is_dir, p) = if home_abbr {
+                    (p.is_dir(), p.unexpand()?.to_string_lossy().to_string())
                 } else {
-                    rest.to_owned() + " " + &matching + if p.is_dir() { "/" } else { "" }
+                    (p.is_dir(), p.to_string_lossy().to_string())
+                };
+                if rest.is_empty() {
+                    p + if is_dir { "/" } else { "" }
+                } else {
+                    rest.to_owned() + " " + &p + if is_dir { "/" } else { "" }
                 }
             } else {
                 let p = base_path.join(matching);
-                if rest.is_empty() {
-                    p.to_string_lossy().to_string() + if p.is_dir() { "/" } else { "" }
+                let (is_dir, p) = if home_abbr {
+                    (p.is_dir(), p.unexpand()?.to_string_lossy().to_string())
                 } else {
-                    rest.to_owned()
-                        + " "
-                        + &*p.to_string_lossy().to_string()
-                        + if p.is_dir() { "/" } else { "" }
+                    (p.is_dir(), p.to_string_lossy().to_string())
+                };
+                if rest.is_empty() {
+                    p + if is_dir { "/" } else { "" }
+                } else {
+                    rest.to_owned() + " " + &p + if is_dir { "/" } else { "" }
                 }
             };
 
