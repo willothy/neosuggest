@@ -58,10 +58,10 @@ impl Source for Pwd {
             .hidden(!search.starts_with('.'))
             .build()
             .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()))
+            .skip(1)
             .collect::<Vec<_>>();
 
         if search == "" && !entries.is_empty() {
-            // search = entries.get(0)?.get(0)?;
             let t = entries
                 .iter()
                 .find(|s| !s.starts_with('.') && !s.ends_with(".lock"))?
