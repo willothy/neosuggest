@@ -19,8 +19,8 @@ async fn main() -> ExitCode {
     let sources = SourcesBuilder::new()
         .using(sources::Pwd) // Matches entries in pwd or path query
         .with_priority(0)
-        // .using(sources::Zoxide) // Matches with Zoxide
-        // .with_priority(1)
+        .using(sources::Zoxide) // Matches with Zoxide
+        .with_priority(1)
         // .using(Path)
         .finalize();
 
