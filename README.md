@@ -6,6 +6,7 @@
 
 - [x] Path fuzzy matching
 - [x] Zoxide support (WIP)
+- [x] Respects .gitignore and doesn't suggest `.git/`
 - [ ] Command & arg completions
 - [ ] History integration
 
