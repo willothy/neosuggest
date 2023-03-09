@@ -10,6 +10,7 @@ anyhow = "1.0.69"
 async-trait = "0.1.66"
 common-path = "1.0.0"
 futures = "0.3.26"
+ignore = { version = "0.4.20", features = ["simd-accel"] }
 itertools = "0.10.5"
 ngrammatic = "0.4.0"
 rayon = "1.7.0"

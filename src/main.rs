@@ -1,12 +1,8 @@
 use builder::SourcesBuilder;
-use sources::pwd::Pwd;
-use sources::zoxide::Zoxide;
 
 use std::env::args;
 use std::io::{stdout, Write};
 use std::process::ExitCode;
-
-use self::sources::path::Path;
 
 pub mod builder;
 pub mod sources;
@@ -21,9 +17,9 @@ async fn main() -> ExitCode {
     };
 
     let sources = SourcesBuilder::new()
-        .using(Pwd) // Matches entries in pwd or path query
-        .using(Zoxide) // Matches with Zoxide
-        .using(Path)
+        .using(sources::Pwd) // Matches entries in pwd or path query
+        .using(sources::Zoxide) // Matches with Zoxide
+        // .using(Path)
         .finalize();
 
     let mut stdout = stdout();

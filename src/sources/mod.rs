@@ -1,9 +1,13 @@
 use std::sync::Arc;
 
-pub mod corpus;
-pub mod path;
-pub mod pwd;
-pub mod zoxide;
+mod corpus;
+mod path;
+mod pwd;
+mod zoxide;
+
+pub use path::Path;
+pub use pwd::Pwd;
+pub use zoxide::Zoxide;
 
 #[async_trait::async_trait]
 pub trait Source

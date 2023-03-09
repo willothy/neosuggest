@@ -1,6 +1,7 @@
 use std::env::current_dir;
 use std::path::PathBuf;
 
+use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use ngrammatic::CorpusBuilder;
 
 use super::Source;
@@ -44,27 +45,21 @@ impl Source for Pwd {
         };
 
         let path = base_path.canonicalize().ok()?;
-        // Shoud I use async here?? idk
-        // let entries = tokio::fs::read_dir(&path).await.ok()?;
-        // while let Some(entry) = entries.next_entry().await.ok()? {
-        //     let is_dir = entry.path().is_dir();
-        //     println!(
-        //         "entry: {}{}",
-        //         entry.file_name().to_string_lossy().to_string(),
-        //         if is_dir { "/" } else { "" }
-        //     );
-        //     corpus.add_text(&*format!(
-        //         "{}{}",
-        //         entry.file_name().to_string_lossy().to_string(),
-        //         if is_dir { "/" } else { "" }
-        //     ));
-        // }
 
-        let entries = path
-            .read_dir()
+        let overrides = OverrideBuilder::new(&path)
+            .add("!.git/")
             .ok()?
+            .build()
+            .ok()?;
+        let entries = WalkBuilder::new(path)
+            .max_depth(Some(1))
+            .standard_filters(true)
+            .overrides(overrides)
+            .hidden(!search.starts_with('.'))
+            .build()
             .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()))
             .collect::<Vec<_>>();
+
         if search == "" && !entries.is_empty() {
             // search = entries.get(0)?.get(0)?;
             let t = entries
