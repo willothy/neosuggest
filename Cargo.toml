@@ -15,3 +15,11 @@ itertools = "0.10.5"
 ngrammatic = "0.4.0"
 rayon = "1.7.0"
 tokio = { version = "1.26.0", features = ["full"] }
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[dev-dependencies]
+bencher = "0.1.5"
+test_bin = "0.4.0"
