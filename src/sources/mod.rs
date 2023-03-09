@@ -1,10 +1,14 @@
 use std::sync::Arc;
 
 mod corpus;
-mod path;
-mod pwd;
-mod zoxide;
+#[cfg(feature = "db")]
+pub mod db;
+pub mod path;
+pub mod pwd;
+pub mod zoxide;
 
+#[cfg(feature = "db")]
+pub use db::Db;
 pub use path::Path;
 pub use pwd::Pwd;
 pub use zoxide::Zoxide;

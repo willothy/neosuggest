@@ -29,7 +29,7 @@ impl Source for Pwd {
         let home_abbr = path.starts_with("~");
         path = path.expand()?;
         let len = path.components().count();
-        let (base_path, mut search) = if len > 1 {
+        let (mut base_path, mut search) = if len > 1 {
             let search = path
                 .components()
                 .last()
@@ -47,7 +47,13 @@ impl Source for Pwd {
             (pwd.clone(), word.to_owned())
         };
 
-        let path = base_path.canonicalize().ok()?;
+        let mut show_next = false;
+        let path = if path.exists() && word.ends_with('/') {
+            show_next = true;
+            path
+        } else {
+            base_path.canonicalize().ok()?
+        };
 
         let overrides = OverrideBuilder::new(&path)
             .add("!.git/")
@@ -55,22 +61,19 @@ impl Source for Pwd {
             .build()
             .ok()?;
         let start = search.chars().nth(0)?;
-        let entries = WalkBuilder::new(path)
+        let entries = WalkBuilder::new(&path)
             .max_depth(Some(1))
             .standard_filters(true)
             .overrides(overrides)
             .hidden(!search.starts_with('.'))
-            .filter_entry(move |e| e.file_name().to_string_lossy().starts_with(start))
+            .filter_entry(move |e| show_next || e.file_name().to_string_lossy().starts_with(start))
             .build()
             .filter_map(|e| e.ok().map(|v| v.file_name().to_string_lossy().to_string()))
             .skip(1)
             .collect::<Vec<_>>();
 
-        if search == "" && !entries.is_empty() {
-            let t = entries
-                .iter()
-                .find(|s| !s.starts_with('.') && !s.ends_with(".lock"))?
-                .clone();
+        if show_next || search == "" && !entries.is_empty() {
+            let t = entries.iter().find(|s| !s.starts_with('.'))?.clone();
             search = t.to_owned();
         }
         let slen = search.len();
@@ -80,10 +83,19 @@ impl Source for Pwd {
             .fill(entries)
             .finish()
             .search(&*search, threshold);
-        if let Some(res) = res.first_mut() {
-            let matching = std::mem::take(&mut res.text);
+        if let Some(search_res) = res.first_mut() {
+            let matching = if show_next {
+                return Some(format!(
+                    "{} {}{}",
+                    rest,
+                    &word,
+                    std::mem::take(&mut search_res.text)
+                ));
+            } else {
+                std::mem::take(&mut search_res.text)
+            };
 
-            let res = if base_path == pwd {
+            let result = if base_path == pwd {
                 let p = PathBuf::from(&matching);
                 let (is_dir, p) = if home_abbr {
                     (p.is_dir(), p.unexpand()?.to_string_lossy().to_string())
@@ -109,7 +121,16 @@ impl Source for Pwd {
                 }
             };
 
-            Some(res)
+            Some(
+                result, // + &format!(
+                       //     " \n{}",
+                       //     res.iter()
+                       //         .skip(1)
+                       //         .map(|v| v.text.clone())
+                       //         .collect::<Vec<_>>()
+                       //         .join("\n")
+                       // ),
+            )
         } else {
             None
         }

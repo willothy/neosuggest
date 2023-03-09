@@ -1,42 +1,24 @@
+use anyhow::anyhow;
 use builder::SourcesBuilder;
 
-use std::collections::HashMap;
 use std::env::args;
-use std::fs::File;
 use std::io::{stdout, Write};
-use std::path::PathBuf;
 use std::process::ExitCode;
 
+use anyhow::Result;
+
 pub mod builder;
+mod init;
 pub mod sources;
 pub mod util;
-
-use rustbreak::{deser::Bincode, FileDatabase, PathDatabase};
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-struct Entry {
-    path: PathBuf,
-    importance: usize,
-}
-
 // const HISTFILE: &str = "HISTFILE";
 
-#[tokio::main]
-async fn main() -> ExitCode {
-    let word = match args().nth(1) {
-        Some(word) => word,
-        _ => return ExitCode::SUCCESS,
-    };
-
-    //    let Some(config) = dirs::config_dir() else {
-    // 	return ExitCode::FAILURE
+async fn run(word: &String) -> Result<()> {
+    // let Some(config) = dirs::config_dir() else {
+    // 	return Err(anyhow!("Could not find config dir"))
     // };
-    //    let path = config.join("neosuggest.db");
-    //    let Ok(db) =
-    //           PathDatabase::<HashMap<String, Entry>, Bincode>::load_from_path_or_default(path) else {
-    //    	return ExitCode::FAILURE
-    //    };
+    // let path = config.join("neosuggest.db");
+    // let db = sources::db::load(path)?;
 
     let sources = SourcesBuilder::new()
         .using(sources::Pwd) // Matches entries in pwd or path query
@@ -48,12 +30,26 @@ async fn main() -> ExitCode {
 
     let mut stdout = stdout();
     if let Some(res) = sources.search(word.clone()).await {
-        let Ok(_) = write!(stdout, "{}", res) else {
-			return ExitCode::FAILURE
-		};
-        let Ok(_) = stdout.flush() else {
-			return ExitCode::FAILURE
-		};
+        write!(stdout, "{}", res)?;
+        stdout.flush()?;
+        Ok(())
+    } else {
+        Err(anyhow!(""))
+    }
+}
+
+#[tokio::main]
+async fn main() -> ExitCode {
+    let args = args().skip(1).take(2).collect::<Vec<_>>();
+    let res = match args.get(0) {
+        Some(word) if &*word == "run" => match args.get(1) {
+            Some(word) => run(word).await,
+            None => Ok(()),
+        },
+        Some(word) if &*word == "init" => init::init(),
+        _ => Ok(()),
+    };
+    if res.is_ok() {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE
