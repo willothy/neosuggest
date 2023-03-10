@@ -1,6 +1,6 @@
 # Neosuggest
 
-## WIP Suggestion engine for zsh-autosuggest
+## WIP Suggestion engine for the command line
 
 And I mean VERY WIP, don't use this yet :)
 
