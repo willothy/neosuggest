@@ -13,6 +13,12 @@ And I mean VERY WIP, don't use this yet :)
     - [ ] Generate completions from clap Command using custom `clap_complete` generator
     - [ ] Completion plugins using dylib loading
 - [ ] History integration
+- [ ] Cross-shell suggestions
+    - [X] Zsh (Hijacking zsh-autosuggestions for now)
+    - [ ] Bash
+    - [ ] Ion (Redox)?
+    - [ ] Cmd / Powershell ? 
+    - [ ] ...
 
 ### Usage:
 
